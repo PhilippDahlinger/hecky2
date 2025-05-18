@@ -3,7 +3,7 @@ import socketserver
 import os
 
 PORT = 8888
-ROOT_DIR = "data/labeled_frames"
+ROOT_DIR = "data/dice_crops"
 
 class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
