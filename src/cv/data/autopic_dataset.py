@@ -16,6 +16,7 @@ class AutopicDataset(Dataset):
         self.image_cache_path = os.path.join("data", "autopic_dataset", "images")
         self.transformation_pipeline = self.create_transformation_pipeline(data_augmentation)
         print(f"Created dataset with {len(self.manifest)} images.")
+        self.mem_cache = {}
 
     def __len__(self):
         return len(self.manifest)
@@ -23,14 +24,19 @@ class AutopicDataset(Dataset):
     def __getitem__(self, idx):
         # Get image path
         filename = self.manifest.loc[idx, 'filename']
-        img_path = os.path.join(self.image_cache_path, filename)
-        # Open and preprocess image
-        image = torchvision.io.decode_image(img_path)
-        # check that image is correctly loaded
-        if image is None:
-            raise UnidentifiedImageError(f"Image {img_path} could not be loaded.")
-        assert len(image.shape) == 3
-        assert image.shape[0] == 3
+        if filename in self.mem_cache:
+            # If image is in memory cache, use it
+            image = self.mem_cache[filename]
+        else:
+            img_path = os.path.join(self.image_cache_path, filename)
+            # Open and preprocess image
+            image = torchvision.io.decode_image(img_path)
+            # check that image is correctly loaded
+            if image is None:
+                raise UnidentifiedImageError(f"Image {img_path} could not be loaded.")
+            assert len(image.shape) == 3
+            assert image.shape[0] == 3
+            self.mem_cache[filename] = image  # Cache the image in memory
         # Prepare model inputs:
         inputs = self.transformation_pipeline(image)
         # label
