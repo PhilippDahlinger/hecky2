@@ -2,9 +2,9 @@ import cv2
 import os
 
 def review_video_frames(video_path,
-                        accepted_dir="data/accepted_frames",
+                        accepted_dir="data/negative_samples",
                         rejected_dir="data/rejected_frames",
-                        second_skip=0.5):
+                        second_skip=0.75):
     os.makedirs(accepted_dir, exist_ok=True)
     os.makedirs(rejected_dir, exist_ok=True)
 
@@ -70,9 +70,8 @@ def review_video_frames(video_path,
     cv2.destroyAllWindows()
 
 
-
 if __name__ == "__main__":
-    root_path = "data/videos/table_2"
+    root_path = "data/videos/negative_samples"
     for video_file in os.listdir(root_path):
         video_path = os.path.join(root_path, video_file)
         if os.path.isfile(video_path) and video_file.endswith(('.mp4', '.avi', '.mov')):
