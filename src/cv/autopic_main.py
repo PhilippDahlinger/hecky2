@@ -29,7 +29,7 @@ def train(config) -> None:
     wandb_logger = CustomWandBLogger(
         project="Hecky2_autopic",  # Name of your WandB project
         name=config["exp_name"],  # Name of the current run
-        group="debug",  # Group name for the run
+        group="group",  # Group name for the run
         config=config,  # Configuration object
     )
 

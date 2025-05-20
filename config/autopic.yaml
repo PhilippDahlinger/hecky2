@@ -7,4 +7,4 @@ lr_scheduler:
   T_max: 400        # Usually the total # of epochs
   eta_min: 1.0e-7  # The minimum LR to which we decay
 
-exp_name: "02_initial"
+exp_name: "03_initial"
