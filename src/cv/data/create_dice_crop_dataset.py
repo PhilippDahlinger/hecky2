@@ -16,7 +16,6 @@ def create_label_csv(label_studio_csv):
     data = []
     for index, row in df.iterrows():
         row_dict = row.to_dict()
-        print(row_dict)
         # Extract prefix and index from filename
         filename = row_dict["image"].split("/")[-1]
         label_str = row_dict["choice"]
@@ -26,7 +25,7 @@ def create_label_csv(label_studio_csv):
         if label_str == "worm":
             label = 6
         elif label_str == "undetectable":
-            label = 0
+            continue  # skip undetectable
         else:
             label = int(label_str)
         # add to data
