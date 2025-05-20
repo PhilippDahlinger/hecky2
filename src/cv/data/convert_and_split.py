@@ -7,10 +7,10 @@ import shutil
 
 # ------------------------------------------------------------------
 # SETTINGS
-root = "/home/philipp/projects/hecky2/data/exported_labels/yolo_with_images"  # project root containing images/ and labels/
-img_dir_in = os.path.join(root, "images")
-lbl_dir_in = os.path.join(root, "labels")  # Label-Studio txts (x1 y1 x3 y3 …)
-out_root = os.path.join(root, "dataset")  # output dataset
+root = "/home/philipp/projects/hecky2/data"  # project root containing images/ and labels/
+img_dir_in = os.path.join(root, "negative_samples")
+lbl_dir_in = os.path.join(root, "negative_labels")  # Label-Studio txts (x1 y1 x3 y3 …)
+out_root = os.path.join(root, "exported_labels", "yolo_with_images", "dataset")  # output dataset
 train_pct = 0.8  # 80 % train / 20 % val
 seed = 42  # reproducibility
 
