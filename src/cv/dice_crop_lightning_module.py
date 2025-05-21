@@ -69,10 +69,10 @@ class DiceCropModel(LightningModule):
 
         train_loss = torch.tensor(self.training_step_outputs).mean()
         metrics = {
-            'train_loss': train_loss,
-            'train_acc': self.train_acc.compute(),
-            'train_f1': self.train_f1.compute(),
-            'epoch': self.current_epoch
+            'metrics/train_loss': train_loss,
+            'metrics/train_acc': self.train_acc.compute(),
+            'metrics/train_f1': self.train_f1.compute(),
+            'trainer/epoch': self.current_epoch
         }
         vis = {}
         # Log misclassified images to wandb
@@ -83,10 +83,9 @@ class DiceCropModel(LightningModule):
                 wandb_images.append(
                     wandb.Image(img, caption=f"GT: {label}, Pred: {pred}")
                 )
-            vis["vis/train_misclassified"] = wandb_images
+            metrics["vis/train_misclassified"] = wandb_images
 
-        self.log_dict(metrics, on_epoch=True, prog_bar=True)
-        self.logger.experiment.log(vis)
+        self.logger.experiment.log(metrics)
 
         # Reset
         self.training_step_outputs.clear()
@@ -121,11 +120,10 @@ class DiceCropModel(LightningModule):
     def on_validation_epoch_end(self):
         val_loss = torch.tensor(self.val_step_outputs).mean()
         metrics = {
-            'val_loss': val_loss,
-            'val_acc': self.val_acc.compute(),
-            'val_f1': self.val_f1.compute()
+            'metrics/val_loss': val_loss,
+            'metrics/val_acc': self.val_acc.compute(),
+            'metrics/val_f1': self.val_f1.compute()
         }
-        vis = {}
 
         # Log misclassified images to wandb
         if self.val_misclassified_images:
@@ -135,10 +133,10 @@ class DiceCropModel(LightningModule):
                 wandb_images.append(
                     wandb.Image(img, caption=f"GT: {label}, Pred: {pred}")
                 )
-            vis["vis/val_misclassified"] = wandb_images
+            metrics["vis/val_misclassified"] = wandb_images
 
-        self.log_dict(metrics, on_epoch=True, prog_bar=True)
-        self.logger.experiment.log(vis)
+        self.logger.experiment.log(metrics)
+        self.log("val_loss", val_loss, prog_bar=True, on_epoch=True)
 
         # Reset
         self.val_step_outputs.clear()

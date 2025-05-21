@@ -51,7 +51,7 @@ def train(config) -> None:
         callbacks = None
 
     trainer = Trainer(
-        num_sanity_val_steps=2,
+        num_sanity_val_steps=0,
         logger=wandb_logger,  # Use the wandb logger
         max_epochs=100,  # Max number of epochs for training
         accelerator="cpu",  # what type of accelerator to use

@@ -50,6 +50,7 @@ class DiceCropDataset(Dataset):
         ]
         if data_augmentation:
             # dataset augmentation
+            transform_list.append(T.RandomRotation(degrees=15))
             transform_list.append(T.RandomHorizontalFlip(p=0.5))
             transform_list.append(
                 T.RandomPerspective(distortion_scale=0.1,

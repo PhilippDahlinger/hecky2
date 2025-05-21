@@ -65,7 +65,7 @@ def resize_and_convert_images(input_folder, output_folder="data/dice_crop_datase
                 print(f"Error processing file {file_path}: {e}")
 
 if __name__ == "__main__":
-    create_label_csv("data/exported_labels/crops.csv")
+    create_label_csv("data/exported_labels/crops_2.csv")
     # input_folder = "data/dice_crops"
     # output_folder = "data/dice_crop_dataset/images"
     # resize_and_convert_images(input_folder,  output_folder=output_folder)
