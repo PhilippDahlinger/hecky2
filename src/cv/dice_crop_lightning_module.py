@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import wandb
 from lightning import LightningModule
 import torchmetrics
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -32,54 +33,118 @@ class DiceCropModel(LightningModule):
         self.training_step_outputs = []
         self.val_step_outputs = []
 
+        self.train_misclassified_images = []  # Stores (image, pred, label)
+        self.val_misclassified_images = []  # Stores (image, pred, label)
+
     def forward(self, x, output_logits=True):
         logits = self.model(x)
         return logits if output_logits else torch.softmax(logits, dim=1)
 
     def training_step(self, batch, batch_idx):
         x = batch['image']
-        y = batch['label'].long()  # Ensure LongTensor
+        y = batch['label'].squeeze(-1).long()  # Ensure shape [batch_size]
         logits = self(x)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
+
+        # Update metrics
         self.train_acc(preds, y)
         self.train_f1(preds, y)
         self.training_step_outputs.append(loss.item())
+
+        # Collect misclassified images
+        misclassified_mask = preds != y
+        if misclassified_mask.any():
+            misclassified_imgs = x[misclassified_mask]
+            misclassified_preds = preds[misclassified_mask]
+            misclassified_labels = y[misclassified_mask]
+            for img, pred, label in zip(misclassified_imgs, misclassified_preds, misclassified_labels):
+                if len(self.train_misclassified_images) < 30:
+                    self.train_misclassified_images.append((img.cpu(), pred.item(), label.item()))
+
         return loss
 
     def on_train_epoch_end(self):
+        import wandb
+
         train_loss = torch.tensor(self.training_step_outputs).mean()
-        self.log_dict({
+        metrics = {
             'train_loss': train_loss,
             'train_acc': self.train_acc.compute(),
             'train_f1': self.train_f1.compute(),
             'epoch': self.current_epoch
-        }, on_epoch=True, prog_bar=True)
+        }
+        vis = {}
+        # Log misclassified images to wandb
+        if self.train_misclassified_images:
+            wandb_images = []
+            for img, pred, label in self.train_misclassified_images:
+                img = img.clone()
+                wandb_images.append(
+                    wandb.Image(img, caption=f"GT: {label}, Pred: {pred}")
+                )
+            vis["vis/train_misclassified"] = wandb_images
+
+        self.log_dict(metrics, on_epoch=True, prog_bar=True)
+        self.logger.experiment.log(vis)
+
+        # Reset
         self.training_step_outputs.clear()
         self.train_acc.reset()
         self.train_f1.reset()
+        self.train_misclassified_images.clear()
 
     def validation_step(self, batch, batch_idx):
         x = batch['image']
-        y = batch['label'].long()
+        y = batch['label'].squeeze(-1).long()
         logits = self(x)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=1)
+
+        # Update metrics
         self.val_acc(preds, y)
         self.val_f1(preds, y)
         self.val_step_outputs.append(loss.item())
+
+        # Collect misclassified images
+        misclassified_mask = preds != y
+        if misclassified_mask.any():
+            misclassified_imgs = x[misclassified_mask]
+            misclassified_preds = preds[misclassified_mask]
+            misclassified_labels = y[misclassified_mask]
+            for img, pred, label in zip(misclassified_imgs, misclassified_preds, misclassified_labels):
+                if len(self.val_misclassified_images) < 30:
+                    self.val_misclassified_images.append((img.cpu(), pred.item(), label.item()))
+
         return loss
 
     def on_validation_epoch_end(self):
         val_loss = torch.tensor(self.val_step_outputs).mean()
-        self.log_dict({
+        metrics = {
             'val_loss': val_loss,
             'val_acc': self.val_acc.compute(),
-            'val_f1': self.val_f1.compute(),
-        }, on_epoch=True, prog_bar=True)
+            'val_f1': self.val_f1.compute()
+        }
+        vis = {}
+
+        # Log misclassified images to wandb
+        if self.val_misclassified_images:
+            wandb_images = []
+            for img, pred, label in self.val_misclassified_images:
+                img = img.clone()
+                wandb_images.append(
+                    wandb.Image(img, caption=f"GT: {label}, Pred: {pred}")
+                )
+            vis["vis/val_misclassified"] = wandb_images
+
+        self.log_dict(metrics, on_epoch=True, prog_bar=True)
+        self.logger.experiment.log(vis)
+
+        # Reset
         self.val_step_outputs.clear()
         self.val_acc.reset()
         self.val_f1.reset()
+        self.val_misclassified_images.clear()
 
     def configure_optimizers(self):
         param_groups = [

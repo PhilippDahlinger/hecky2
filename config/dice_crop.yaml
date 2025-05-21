@@ -1,5 +1,5 @@
-lr_classifier: 5.0e-4
-lr_backbone: 1.0e-5
+lr_classifier: 1.0e-3
+lr_backbone: 5.0e-5
 weight_decay_classifier: 0.001
 weight_decay_backbone: 0.001
 
@@ -7,6 +7,6 @@ lr_scheduler:
   T_max: 50        # Usually the total # of epochs
   eta_min: 1.0e-7  # The minimum LR to which we decay
 
-exp_name: "05_filtered"
+exp_name: "07_small"
 
 num_classes: 7
